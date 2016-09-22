@@ -342,17 +342,17 @@ static adapter_t *open_usb_adapter(const char *port_name)
         /* Autodetect the device from a list of known adapters. */
         adapter_t *a = adapter_open_pickit2(0, 0, 0);
         if (! a)
-            a = adapter_open_pickit3(0, 0, 0);
+          //  a = adapter_open_pickit3(0, 0, 0);
 #ifdef USE_MPSSE
-        if (! a)
-            a = adapter_open_mpsse(0, 0, 0);
+        //if (! a)
+         //   a = adapter_open_mpsse(0, 0, 0);
 #endif
-        if (! a)
-            a = adapter_open_hidboot(0, 0, 0);
+        //if (! a)
+         //   a = adapter_open_hidboot(0, 0, 0);
         if (! a)
             a = adapter_open_an1388(0, 0, 0);
-        if (! a)
-            a = adapter_open_uhb(0, 0, 0);
+        //if (! a)
+         //   a = adapter_open_uhb(0, 0, 0);
         return a;
     }
 

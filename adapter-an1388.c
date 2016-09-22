@@ -79,15 +79,16 @@ static void an1388_send(hid_device *hiddev, unsigned char *buf, unsigned nbytes)
         }
         fprintf(stderr, "\n");
     }
-    hid_write(hiddev, buf, 64);
+    hid_write(hiddev, buf, nbytes);
+    //hid_write(hiddev, buf, 64);
 }
 
 static int an1388_recv(hid_device *hiddev, unsigned char *buf)
 {
     int n;
 
-    n = hid_read(hiddev, buf, 64);
-    if (n <= 0) {
+    n = hid_read_timeout(hiddev, buf, 64, 1000);
+    if (n < 0) {
         fprintf(stderr, "hidboot: error %d receiving packet\n", n);
         exit(-1);
     }
@@ -149,13 +150,16 @@ static void an1388_command(an1388_adapter_t *a, unsigned char cmd,
     n = add_byte(crc >> 8, buf, n);
 
     buf[n++] = FRAME_EOT;
-    an1388_send(a->hiddev, buf, n);
-
-    if (cmd == CMD_JUMP_APP) {
-        /* No reply expected. */
-        return;
+    for(i=0; i<10; ++i){
+        an1388_send(a->hiddev, buf, n);
+        if (cmd == CMD_JUMP_APP) {
+            /* No reply expected. */
+            return;
+        }
+        n = an1388_recv(a->hiddev, buf);
+        if(n)
+            break;       
     }
-    n = an1388_recv(a->hiddev, buf);
     c = 0;
     for (i=0; i<n; ++i) {
         switch (buf[i]) {
@@ -395,8 +399,8 @@ adapter_t *adapter_open_an1388(int vid, int pid, const char *serial)
     printf("      Adapter: AN1388 Bootloader Version %d.%d\n",
         a->reply[1], a->reply[2]);
 
-    a->adapter.user_start = 0x1d000000;
-    a->adapter.user_nbytes = 512 * 1024;
+    a->adapter.user_start = 0x9d000000;
+    a->adapter.user_nbytes = 128 * 1024;
     printf(" Program area: %08x-%08x\n", a->adapter.user_start,
         a->adapter.user_start + a->adapter.user_nbytes - 1);
     a->adapter.block_override = 0;

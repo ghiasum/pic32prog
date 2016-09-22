@@ -95,6 +95,8 @@ unsigned mseconds_elapsed(void *arg)
 void store_data(unsigned address, unsigned byte)
 {
     unsigned offset;
+    
+    //printf("address = %x\n", address); 
 
     if (address >= BOOTV_BASE && address < BOOTV_BASE + BOOT_BYTES) {
         /* Boot code, virtual. */
@@ -240,6 +242,7 @@ int read_hex(char *filename)
             exit(1);
         }
 	address = high << 16 | HEX(buf+3) << 8 | HEX(buf+5);
+    //printf("address = 0x%x\n", address);
 
 	sum = 0;
 	for (i=0; i<bytes; ++i) {
@@ -267,7 +270,7 @@ int read_hex(char *filename)
                 filename, record_type);
             exit(1);
         }
-        //printf("%08x: %u bytes\n", address, bytes);
+        printf("%08x: %u bytes\n", address, bytes);
         for (i=0; i<bytes; i++) {
             store_data(address++, data [i]);
         }
@@ -459,19 +462,19 @@ void do_program(char *filename)
     if (boot_bytes > 0)
         printf(_("  Boot memory: %d kbytes\n"), boot_bytes / 1024);
     printf(_("         Data: %d bytes\n"), total_bytes);
-
+    boot_used = 0;
     /* Verify DEVCFGx values. */
-    if (boot_used) {
-        if (devcfg0 == 0xffffffff) {
-            fprintf(stderr, _("DEVCFG values are missing -- check your HEX file!\n"));
-            exit(1);
-        }
-        if (devcfg_offset == 0xffc0) {
-            /* For MZ family, clear bits DEVSIGN0[31] and ADEVSIGN0[31]. */
-            boot_data[0xFFEF] &= 0x7f;
-            boot_data[0xFF6F] &= 0x7f;
-        }
-    }
+   if (boot_used) {
+       if (devcfg0 == 0xffffffff) {
+           fprintf(stderr, _("DEVCFG values are missing -- check your HEX file!\n"));
+           exit(1);
+       }
+       if (devcfg_offset == 0xffc0) {
+           /* For MZ family, clear bits DEVSIGN0[31] and ADEVSIGN0[31]. */
+           boot_data[0xFFEF] &= 0x7f;
+           boot_data[0xFF6F] &= 0x7f;
+       }
+   }
 
     if (! verify_only) {
         /* Erase flash. */
@@ -485,6 +488,7 @@ void do_program(char *filename)
             flash_dirty [addr / blocksz] = is_flash_block_dirty(addr);
         }
     }
+
     if (boot_used) {
         for (addr=0; addr<boot_bytes; addr+=blocksz) {
             boot_dirty [addr / blocksz] = is_boot_block_dirty(addr);
@@ -825,7 +829,7 @@ usage:
         }
         break;
     case 1:
-        if (! read_srec(argv[0]) &&
+        if (/*! read_srec(argv[0]) &&*/
             ! read_hex(argv[0])) {
             fprintf(stderr, _("%s: bad file format\n"), argv[0]);
             exit(1);
