@@ -121,7 +121,7 @@ static inline unsigned add_byte(unsigned char c,
 static void an1388_command(an1388_adapter_t *a, unsigned char cmd,
     unsigned char *data, unsigned data_len)
 {
-    unsigned char buf [64];
+    unsigned char buf [128];
     unsigned i, n, c, crc;
 
     if (debug_level > 0) {
